@@ -1,0 +1,77 @@
+// app/screens/JobsScreen.tsx
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import React, { JSX, useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Delivery, fetchAssignedDeliveriesApi } from '../api/jobs';
+import { useAuth } from '../context/AuthContext';
+import type { RootStackParamList } from '../navigation/types';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'Jobs'>;
+
+export default function JobsScreen({ navigation }: Props): JSX.Element {
+  const { user, signOut } = useAuth();
+  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
+
+  useEffect(() => { loadDeliveries(); }, []);
+
+  const loadDeliveries = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const data = await fetchAssignedDeliveriesApi(user.token);
+      setDeliveries(data);
+    } catch (e) {
+      console.warn(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filtered = deliveries.filter(d => d.title.toLowerCase().includes(query.toLowerCase()) || d.dropoffAddress.toLowerCase().includes(query.toLowerCase()) || d.recipient.toLowerCase().includes(query.toLowerCase()));
+
+  const renderItem = ({ item }: { item: Delivery }) => (
+    <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('JobDetail', { job: item })}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text style={styles.badge}>{item.priority}</Text>
+      </View>
+      <Text style={styles.cardSub}>{item.short}</Text>
+      <Text style={styles.muted}>To: {item.recipient} • ETA: {item.eta}</Text>
+      <Text style={styles.muted}>Drop-off: {item.dropoffAddress}</Text>
+    </TouchableOpacity>
+  );
+
+  if (loading) return <View style={[styles.container, { justifyContent: 'center' }]}><ActivityIndicator /></View>;
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.heading}>Assigned Deliveries</Text>
+        <TouchableOpacity onPress={() => signOut()}><Text style={{ color: '#0b6eaa' }}>Logout</Text></TouchableOpacity>
+      </View>
+
+      <TextInput placeholder="Search recipient, address, or order" style={styles.input} value={query} onChangeText={setQuery} />
+
+      <FlatList data={filtered} keyExtractor={(i) => i.id} renderItem={renderItem} ListEmptyComponent={<Text style={{ marginTop: 24, textAlign: 'center' }}>No deliveries assigned.</Text>} />
+    </View>
+  );
+}
+
+const PRIMARY = '#0b6eaa';
+const BG = '#f7fbfc';
+const CARD = '#fff';
+const MUTED = '#64748b';
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16, paddingTop: 24, backgroundColor: BG },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  heading: { fontSize: 18, fontWeight: '700', color: PRIMARY },
+  input: { backgroundColor: CARD, padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: '#e6eef4' },
+  card: { backgroundColor: CARD, padding: 12, borderRadius: 8, marginVertical: 8, borderWidth: 1, borderColor: '#eef6fb' },
+  cardTitle: { fontSize: 16, fontWeight: '700' },
+  cardSub: { color: MUTED, marginTop: 6 },
+  muted: { color: MUTED, fontSize: 12, marginTop: 6 },
+  badge: { backgroundColor: '#fde68a', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 16, fontWeight: '700' },
+});
