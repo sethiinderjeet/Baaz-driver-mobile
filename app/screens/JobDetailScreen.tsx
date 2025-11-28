@@ -1,7 +1,7 @@
 // app/screens/JobDetailScreen.tsx
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { JSX } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JobDetail'>;
@@ -41,6 +41,27 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
           </>
         ) : null}
       </View>
+
+      {/* Navigation Button */}
+      {job.dropoffAddress ? (
+        <TouchableOpacity
+          style={[styles.action, { backgroundColor: '#007bff', marginTop: 12 }]}
+          onPress={() => {
+            const scheme = Platform.select({ ios: 'maps://0,0?daddr=', android: 'google.navigation:q=' });
+            const label = encodeURIComponent(job.zipCode || job.dropoffAddress || '');
+            const url = Platform.select({
+              ios: `${scheme}${label}`,
+              android: `${scheme}${label}`
+            });
+
+            if (url) {
+              Linking.openURL(url).catch((err: any) => console.error('An error occurred', err));
+            }
+          }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '700' }}>Navigate to Drop-off</Text>
+        </TouchableOpacity>
+      ) : null}
 
       <TouchableOpacity style={styles.action} onPress={markDelivered}>
         <Text style={{ color: '#fff', fontWeight: '700' }}>Mark Delivered</Text>

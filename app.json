@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "lesson01",
-    "slug": "lesson01",
+    "name": "Baaz Logistics",
+    "slug": "baazlogistics",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "lesson01",
+    "icon": "./assets/images/logo.png",
+    "scheme": "baazlogistics",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -20,7 +20,12 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.inderjeet.devops.lesson01"
+      "package": "com.baazsaneday.baazlogistics",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ]
     },
     "web": {
       "output": "static",
@@ -39,8 +44,7 @@
             "backgroundColor": "#000000"
           }
         }
-      ],
-      "react-native-background-geolocation"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -49,7 +53,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "855ae1ae-b0b1-4745-a404-fc3f37f8017c"
+        "projectId": "99e57ca7-43c8-4ba4-95e5-c6d34b0df06d"
       }
     }
   }
