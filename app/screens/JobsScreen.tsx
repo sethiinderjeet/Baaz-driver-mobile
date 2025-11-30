@@ -52,9 +52,20 @@ export default function JobsScreen({ navigation }: Props): JSX.Element {
         <TouchableOpacity onPress={() => signOut()}><Text style={{ color: '#0b6eaa' }}>Logout</Text></TouchableOpacity>
       </View>
 
-      <TextInput placeholder="Search recipient, address, or order" style={styles.input} value={query} onChangeText={setQuery} />
+      {deliveries.length > 0 && (
+        <TextInput placeholder="Search recipient, address, or order" style={styles.input} value={query} onChangeText={setQuery} />
+      )}
 
-      <FlatList data={filtered} keyExtractor={(i) => i.id} renderItem={renderItem} ListEmptyComponent={<Text style={{ marginTop: 24, textAlign: 'center' }}>No deliveries assigned.</Text>} />
+      <FlatList
+        data={filtered}
+        keyExtractor={(i) => i.id}
+        renderItem={renderItem}
+        ListEmptyComponent={
+          <View style={{ marginTop: 40, alignItems: 'center' }}>
+            <Text style={{ fontSize: 16, color: '#64748b', fontWeight: '500' }}>No job assigned yet</Text>
+          </View>
+        }
+      />
     </View>
   );
 }
