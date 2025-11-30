@@ -1,4 +1,5 @@
 // app/screens/JobDetailScreen.tsx
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { JSX } from 'react';
 import { Alert, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -18,6 +19,9 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Ionicons name="arrow-back" size={24} color="#333" />
+      </TouchableOpacity>
       <Text style={styles.title}>{job.title}</Text>
       <Text style={styles.muted}>Order ID: {job.id} • Priority: {job.priority} • Status: {job.status}</Text>
 
@@ -81,4 +85,5 @@ const styles = StyleSheet.create({
   muted: { color: MUTED, marginTop: 8 },
   detailBox: { backgroundColor: CARD, padding: 12, borderRadius: 8, marginTop: 12, borderWidth: 1, borderColor: '#eef6fb' },
   action: { backgroundColor: '#10b981', padding: 14, borderRadius: 10, alignItems: 'center', marginTop: 18 },
+  backButton: { marginBottom: 16, alignSelf: 'flex-start' },
 });
