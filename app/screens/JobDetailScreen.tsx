@@ -70,11 +70,32 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
     navigation.goBack();
   };
 
+  const handleNavigate = () => {
+    const scheme = Platform.select({ ios: 'maps://0,0?daddr=', android: 'google.navigation:q=' });
+    const label = encodeURIComponent(job.zipCode || job.dropoffAddress || '');
+    const url = Platform.select({
+      ios: `${scheme}${label}`,
+      android: `${scheme}${label}`
+    });
+
+    if (url) {
+      Linking.openURL(url).catch((err: any) => console.error('An error occurred', err));
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Ionicons name="arrow-back" size={24} color="#333" />
-      </TouchableOpacity>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
+        {job.dropoffAddress && (
+          <TouchableOpacity onPress={handleNavigate} style={styles.navButton}>
+            <Ionicons name="compass" size={24} color="#333" />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <Text style={styles.title}>{job.title}</Text>
       <Text style={styles.muted}>Order ID: {job.id} • Priority: {job.priority} • Status: {STATUS_LABELS[job.currentJobStatus] || job.status}</Text>
 
@@ -99,26 +120,15 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
         ) : null}
       </View>
 
-      {/* Navigation Button */}
-      {job.dropoffAddress ? (
+      {/* Navigation Button (Bottom) */}
+      {/* {job.dropoffAddress ? (
         <TouchableOpacity
           style={[styles.action, { backgroundColor: '#007bff', marginTop: 12 }]}
-          onPress={() => {
-            const scheme = Platform.select({ ios: 'maps://0,0?daddr=', android: 'google.navigation:q=' });
-            const label = encodeURIComponent(job.zipCode || job.dropoffAddress || '');
-            const url = Platform.select({
-              ios: `${scheme}${label}`,
-              android: `${scheme}${label}`
-            });
-
-            if (url) {
-              Linking.openURL(url).catch((err: any) => console.error('An error occurred', err));
-            }
-          }}
+          onPress={handleNavigate}
         >
           <Text style={{ color: '#fff', fontWeight: '700' }}>Navigate to Drop-off</Text>
         </TouchableOpacity>
-      ) : null}
+      ) : null} */}
 
       {/* Next Step Button */}
       {job.nextStep <= JOB_STATUS.COMPLETED && (
@@ -140,9 +150,11 @@ const MUTED = '#64748b';
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, paddingTop: 24, backgroundColor: BG },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   title: { fontSize: 20, fontWeight: '800', color: PRIMARY },
   muted: { color: MUTED, marginTop: 8 },
   detailBox: { backgroundColor: CARD, padding: 12, borderRadius: 8, marginTop: 12, borderWidth: 1, borderColor: '#eef6fb' },
   action: { backgroundColor: '#10b981', padding: 14, borderRadius: 10, alignItems: 'center', marginTop: 18 },
-  backButton: { marginBottom: 16, alignSelf: 'flex-start' },
+  backButton: { padding: 4 },
+  navButton: { padding: 4 },
 });
