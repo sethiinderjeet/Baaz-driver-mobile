@@ -1,23 +1,9 @@
-// app/navigation/types.ts
+import { Delivery } from '../api/jobs';
+
 export type RootStackParamList = {
   Login: undefined;
   Jobs: undefined; // we'll keep the name "Jobs" for stack-route compatibility
   JobDetail: {
-    job: {
-      id: string;
-      title: string;
-      short: string;
-      pickupAddress?: string;
-      dropoffAddress?: string;
-      recipient?: string;
-      phone?: string;
-      eta?: string;
-      status?: string;
-      priority?: string;
-      notes?: string;
-      dropoffLat?: number;
-      dropoffLng?: number;
-      zipCode?: string;
-    }
+    job: Delivery;
   };
 };

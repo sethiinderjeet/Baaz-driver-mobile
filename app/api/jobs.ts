@@ -14,7 +14,39 @@ export type Delivery = {
   dropoffLat?: number;
   dropoffLng?: number;
   zipCode?: string;
+  currentJobStatus: number; // 0-6
+  nextStep: number;         // 0-6
 };
+
+export const JOB_STATUS = {
+  ASSIGNED: 0,
+  ON_THE_WAY: 1,
+  ON_PICKUP_SITE: 2,
+  LOADED: 3,
+  ON_DROP_SITE: 4,
+  DELIVERED: 5,
+  COMPLETED: 6,
+};
+
+export const STATUS_LABELS = [
+  "Job Assigned",
+  "On the Way",
+  "On Pickup Site",
+  "Loaded",
+  "On Drop Site",
+  "Delivered",
+  "Job Complete"
+];
+
+export const STATUS_COLORS = [
+  "#0b6eaa", // Assigned - Blue
+  "#f59e0b", // On the Way - Amber
+  "#8b5cf6", // On Pickup Site - Violet
+  "#10b981", // Loaded - Emerald
+  "#3b82f6", // On Drop Site - Blue
+  "#ef4444", // Delivered - Red
+  "#64748b"  // Completed - Slate
+];
 
 export async function fetchAssignedDeliveriesApi(token: string): Promise<Delivery[]> {
   // MOCK list - replace with real fetch when backend ready
@@ -34,7 +66,9 @@ export async function fetchAssignedDeliveriesApi(token: string): Promise<Deliver
       notes: 'Collect COD ₹450',
       dropoffLat: 26.885141,
       dropoffLng: 75.790558,
-      zipCode: 'B25 8HE'
+      zipCode: 'B25 8HE',
+      currentJobStatus: 0,
+      nextStep: 1
     },
     {
       id: 'D-1002',
@@ -50,7 +84,9 @@ export async function fetchAssignedDeliveriesApi(token: string): Promise<Deliver
       notes: 'Call before arrival',
       dropoffLat: 26.912434,
       dropoffLng: 75.787270,
-      zipCode: 'M16 0RA'
+      zipCode: 'M16 0RA',
+      currentJobStatus: 0,
+      nextStep: 1
     },
     {
       id: 'D-1003',
@@ -66,7 +102,16 @@ export async function fetchAssignedDeliveriesApi(token: string): Promise<Deliver
       notes: 'Box sealed',
       dropoffLat: 26.855123,
       dropoffLng: 75.821123,
-      zipCode: 'EH99 1SP'
+      zipCode: 'EH99 1SP',
+      currentJobStatus: 0,
+      nextStep: 1
     },
   ];
+}
+
+export async function updateJobStatusApi(token: string, jobId: string, status: number): Promise<boolean> {
+  // Mock API call
+  console.log(`[API] Updating job ${jobId} status to ${status}`);
+  await new Promise((r) => setTimeout(r, 500));
+  return true;
 }

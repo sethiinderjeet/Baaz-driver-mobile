@@ -2,14 +2,17 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { JSX, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useDispatch } from 'react-redux';
 import { Delivery, fetchAssignedDeliveriesApi } from '../api/jobs';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
+import { setJobs } from '../store/jobsSlice';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Jobs'>;
 
 export default function JobsScreen({ navigation }: Props): JSX.Element {
   const { user, signOut } = useAuth();
+  const dispatch = useDispatch();
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -22,6 +25,7 @@ export default function JobsScreen({ navigation }: Props): JSX.Element {
     try {
       const data = await fetchAssignedDeliveriesApi(user.token);
       setDeliveries(data);
+      dispatch(setJobs(data));
     } catch (e) {
       console.warn(e);
     } finally {

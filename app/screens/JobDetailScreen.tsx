@@ -3,12 +3,65 @@ import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { JSX } from 'react';
 import { Alert, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { JOB_STATUS, STATUS_COLORS, STATUS_LABELS, updateJobStatusApi } from '../api/jobs';
+import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
+import { updateJobStatus } from '../store/jobsSlice';
+import { RootState } from '../store/store';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JobDetail'>;
 
 export default function JobDetailScreen({ route, navigation }: Props): JSX.Element {
-  const { job } = route.params;
+  const { job: initialJob } = route.params;
+  const dispatch = useDispatch();
+  const { user } = useAuth();
+
+  // Get live job status from Redux
+  const job = useSelector((state: RootState) => state.jobs.jobs.find(j => j.id === initialJob.id)) || initialJob;
+
+  const handleNextStep = async () => {
+    if (!user) return;
+
+    const currentStep = job.nextStep;
+    let nextStatus = currentStep;
+    let nextStep = currentStep + 1;
+
+    // Specific functionality for each step (empty methods for now)
+    switch (currentStep) {
+      case JOB_STATUS.ON_THE_WAY:
+        // Logic for "On the Way"
+        break;
+      case JOB_STATUS.ON_PICKUP_SITE:
+        // Logic for "On Pickup Site"
+        break;
+      case JOB_STATUS.LOADED:
+        // Logic for "Loaded"
+        break;
+      case JOB_STATUS.ON_DROP_SITE:
+        // Logic for "On Drop Site"
+        break;
+      case JOB_STATUS.DELIVERED:
+        // Logic for "Delivered"
+        break;
+      case JOB_STATUS.COMPLETED:
+        // Logic for "Job Complete"
+        break;
+    }
+
+    if (currentStep <= JOB_STATUS.COMPLETED) {
+      // Optimistic update
+      dispatch(updateJobStatus({ jobId: job.id, status: nextStatus, nextStep: nextStep }));
+
+      // API call
+      try {
+        await updateJobStatusApi(user.token, job.id, nextStatus);
+      } catch (e) {
+        console.error("Failed to update status", e);
+        // Revert if needed (not implemented for simplicity)
+      }
+    }
+  };
 
   const markDelivered = () => {
     // Replace with real API call to mark as delivered
@@ -23,7 +76,7 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
         <Ionicons name="arrow-back" size={24} color="#333" />
       </TouchableOpacity>
       <Text style={styles.title}>{job.title}</Text>
-      <Text style={styles.muted}>Order ID: {job.id} • Priority: {job.priority} • Status: {job.status}</Text>
+      <Text style={styles.muted}>Order ID: {job.id} • Priority: {job.priority} • Status: {STATUS_LABELS[job.currentJobStatus] || job.status}</Text>
 
       <View style={styles.detailBox}>
         <Text style={{ fontWeight: '700', marginBottom: 6 }}>Pickup</Text>
@@ -67,9 +120,15 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
         </TouchableOpacity>
       ) : null}
 
-      <TouchableOpacity style={styles.action} onPress={markDelivered}>
-        <Text style={{ color: '#fff', fontWeight: '700' }}>Mark Delivered</Text>
-      </TouchableOpacity>
+      {/* Next Step Button */}
+      {job.nextStep <= JOB_STATUS.COMPLETED && (
+        <TouchableOpacity
+          style={[styles.action, { backgroundColor: STATUS_COLORS[job.nextStep] || '#10b981' }]}
+          onPress={handleNextStep}
+        >
+          <Text style={{ color: '#fff', fontWeight: '700' }}>{STATUS_LABELS[job.nextStep]}</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
