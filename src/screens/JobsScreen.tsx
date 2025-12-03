@@ -80,7 +80,7 @@ const CARD = '#fff';
 const MUTED = '#64748b';
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, paddingTop: 24, backgroundColor: BG },
+  container: { flex: 1, padding: 16, paddingTop: 40, backgroundColor: BG },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   heading: { fontSize: 18, fontWeight: '700', color: PRIMARY },
   input: { backgroundColor: CARD, padding: 12, borderRadius: 8, marginVertical: 12, borderWidth: 1, borderColor: '#e6eef4' },

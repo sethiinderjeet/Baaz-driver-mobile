@@ -1,11 +1,11 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import type { RootStackParamList } from './navigation/types';
-import DeliveryDetailScreen from './screens/JobDetailScreen';
-import DeliveriesScreen from './screens/JobsScreen'; // renamed screen uses delivery wording
-import LoginScreen from './screens/LoginScreen';
+import { AuthProvider, useAuth } from '../src/context/AuthContext';
+import type { RootStackParamList } from '../src/navigation/types';
+import DeliveryDetailScreen from '../src/screens/JobDetailScreen';
+import DeliveriesScreen from '../src/screens/JobsScreen'; // renamed screen uses delivery wording
+import LoginScreen from '../src/screens/LoginScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

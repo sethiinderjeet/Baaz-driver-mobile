@@ -263,7 +263,7 @@ const CARD = '#fff';
 const MUTED = '#64748b';
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, paddingTop: 24, backgroundColor: BG },
+  container: { flex: 1, padding: 16, paddingTop: 40, backgroundColor: BG },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   title: { fontSize: 20, fontWeight: '800', color: PRIMARY },
   muted: { color: MUTED, marginTop: 8 },

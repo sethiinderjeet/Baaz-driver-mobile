@@ -5,9 +5,9 @@ import 'react-native-reanimated';
 import { Provider } from 'react-redux';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { store } from './store/store';
+import { store } from '../src/store/store';
 
-import LocationGate from './LocationGate';
+import LocationGate from '../src/components/LocationGate';
 
 
 
