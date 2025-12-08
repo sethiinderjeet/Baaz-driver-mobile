@@ -1,8 +1,10 @@
 // app/context/AuthContext.tsx
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import type { SignInResponse } from '../api/auth';
 import { signInApi, validateEmailApi, verifyOtpApi } from '../api/auth';
+import { setCredentials } from '../store/authSlice';
 
 type User = { token: string; name?: string } | null;
 type AuthContextType = {
@@ -19,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User>(null);
   const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     (async () => {
@@ -49,9 +52,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleLoginSuccess = async (res: SignInResponse) => {
-    await AsyncStorage.setItem('token', res.token);
+    if (res.token) await AsyncStorage.setItem('token', res.token);
     if (res.name) await AsyncStorage.setItem('name', res.name);
-    setUser({ token: res.token, name: res.name });
+
+    // Dispatch to Redux if we have the ID
+    if (res.clientOrDriverID) {
+      dispatch(setCredentials({
+        clientOrDriverID: res.clientOrDriverID,
+        token: res.token,
+        name: res.name
+      }));
+    }
+
+    // Update local state
+    setUser({ token: res.token || '', name: res.name });
   };
 
   const signOut = async () => {

@@ -1,6 +1,13 @@
 // app/api/auth.ts
 import { API_BASE_URL } from '../constants/config';
-export type SignInResponse = { token: string; name?: string };
+
+export type SignInResponse = {
+  token?: string;
+  name?: string;
+  clientOrDriverID?: number;
+  success?: boolean;
+  message?: string;
+};
 
 export async function signInApi(email: string, password: string): Promise<SignInResponse> {
   // MOCK - replace with your backend fetch later

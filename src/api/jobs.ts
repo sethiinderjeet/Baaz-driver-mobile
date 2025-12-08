@@ -48,12 +48,38 @@ export const STATUS_COLORS = [
   "#64748b"  // Completed - Slate
 ];
 
+import { API_BASE_URL } from '../constants/config';
+
+export type JobSummary = {
+  trackingNumber: string;
+  jobTitle: string;
+  clientName: string;
+  totalStops: number;
+  // Optional mapping to existing Delivery if needed for UI compatibility
+  id?: string;
+};
+
+export async function fetchJobsApi(driverId: number): Promise<JobSummary[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/Jobs/${driverId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch jobs');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Fetch jobs error', error);
+    throw error;
+  }
+}
+
 export async function fetchAssignedDeliveriesApi(token: string): Promise<Delivery[]> {
   // MOCK list - replace with real fetch when backend ready
   await new Promise((r) => setTimeout(r, 600));
   return [
     {
       id: 'D-1001',
+      // ... rest of mock data ...
+
       title: 'Deliver - Order #1001',
       short: 'Fragile - Handle with care',
       pickupAddress: 'Unit 5, Industrial Estate, Birmingham B25 8HE',

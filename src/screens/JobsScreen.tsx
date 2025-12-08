@@ -2,38 +2,52 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { JSX, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useDispatch } from 'react-redux';
-import { Delivery, fetchAssignedDeliveriesApi } from '../api/jobs';
+import { useDispatch, useSelector } from 'react-redux';
+import { Delivery, fetchJobsApi } from '../api/jobs';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
-import { setJobs } from '../store/jobsSlice';
+import { setJobSummaries } from '../store/jobsSlice';
+import { RootState } from '../store/store';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Jobs'>;
 
 export default function JobsScreen({ navigation }: Props): JSX.Element {
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const dispatch = useDispatch();
-  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // Select ID from Redux
+  const auth = useSelector((state: RootState) => state.auth);
+  const driverId = auth.clientOrDriverID;
+  const jobs = useSelector((state: RootState) => state.jobs.jobs);
+
+  const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
 
-  useEffect(() => { loadDeliveries(); }, []);
+  // Initial load
+  useEffect(() => {
+    loadDeliveries();
+  }, [driverId]);
 
   const loadDeliveries = async () => {
-    if (!user) return;
+    if (!driverId) return;
     setLoading(true);
     try {
-      const data = await fetchAssignedDeliveriesApi(user.token);
-      setDeliveries(data);
-      dispatch(setJobs(data));
+      // Fetch summary list
+      const data = await fetchJobsApi(driverId);
+      // Update Redux (which adapts it to Delivery[])
+      dispatch(setJobSummaries(data));
     } catch (e) {
-      console.warn(e);
+      console.warn('Load jobs failed', e);
     } finally {
       setLoading(false);
     }
   };
 
-  const filtered = deliveries.filter(d => d.title.toLowerCase().includes(query.toLowerCase()) || d.dropoffAddress.toLowerCase().includes(query.toLowerCase()) || d.recipient.toLowerCase().includes(query.toLowerCase()));
+  const filtered = jobs.filter(d =>
+    d.title.toLowerCase().includes(query.toLowerCase()) ||
+    (d.dropoffAddress && d.dropoffAddress.toLowerCase().includes(query.toLowerCase())) ||
+    d.recipient.toLowerCase().includes(query.toLowerCase())
+  );
 
   const renderItem = ({ item }: { item: Delivery }) => (
     <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('JobDetail', { job: item })}>
@@ -43,11 +57,11 @@ export default function JobsScreen({ navigation }: Props): JSX.Element {
       </View>
       <Text style={styles.cardSub}>{item.short}</Text>
       <Text style={styles.muted}>To: {item.recipient} • ETA: {item.eta}</Text>
-      <Text style={styles.muted}>Drop-off: {item.dropoffAddress}</Text>
+      <Text style={styles.muted}>Drop-off: {item.dropoffAddress || 'N/A'}</Text>
     </TouchableOpacity>
   );
 
-  if (loading) return <View style={[styles.container, { justifyContent: 'center' }]}><ActivityIndicator /></View>;
+  if (loading && jobs.length === 0) return <View style={[styles.container, { justifyContent: 'center' }]}><ActivityIndicator /></View>;
 
   return (
     <View style={styles.container}>
@@ -56,14 +70,14 @@ export default function JobsScreen({ navigation }: Props): JSX.Element {
         <TouchableOpacity onPress={() => signOut()}><Text style={{ color: '#0b6eaa' }}>Logout</Text></TouchableOpacity>
       </View>
 
-      {deliveries.length > 0 && (
-        <TextInput placeholder="Search recipient, address, or order" style={styles.input} value={query} onChangeText={setQuery} />
-      )}
+      <TextInput placeholder="Search..." style={styles.input} value={query} onChangeText={setQuery} />
 
       <FlatList
         data={filtered}
         keyExtractor={(i) => i.id}
         renderItem={renderItem}
+        refreshing={loading}
+        onRefresh={loadDeliveries}
         ListEmptyComponent={
           <View style={{ marginTop: 40, alignItems: 'center' }}>
             <Text style={{ fontSize: 16, color: '#64748b', fontWeight: '500' }}>No job assigned yet</Text>
