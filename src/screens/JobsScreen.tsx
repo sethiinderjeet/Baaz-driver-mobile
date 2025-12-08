@@ -55,6 +55,7 @@ export default function JobsScreen({ navigation }: Props): JSX.Element {
         <Text style={styles.cardTitle}>{item.title}</Text>
         <Text style={styles.badge}>{item.priority}</Text>
       </View>
+      <Text style={[styles.muted, { marginTop: 2 }]}>Ref: {item.trackingNumber}</Text>
       <Text style={styles.cardSub}>{item.short}</Text>
       <Text style={styles.muted}>To: {item.recipient} • ETA: {item.eta}</Text>
       <Text style={styles.muted}>Drop-off: {item.dropoffAddress || 'N/A'}</Text>

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Delivery, JobSummary } from '../api/jobs';
+import { Delivery, JobResponse } from '../api/jobs';
 
 interface JobsState {
     jobs: Delivery[];
@@ -16,22 +16,27 @@ const jobsSlice = createSlice({
         setJobs(state, action: PayloadAction<Delivery[]>) {
             state.jobs = action.payload;
         },
-        // Adapter reducer to convert API summary to UI Delivery model
-        setJobSummaries(state, action: PayloadAction<JobSummary[]>) {
+        // Adapter reducer to convert API response to UI Delivery model
+        setJobSummaries(state, action: PayloadAction<JobResponse[]>) {
             state.jobs = action.payload.map(s => ({
-                id: s.trackingNumber,
-                title: s.jobTitle,
-                short: `${s.totalStops} stop(s)`,
-                recipient: s.clientName,
-                // Placeholders for required fields in Delivery type:
-                pickupAddress: '',
-                dropoffAddress: '',
+                id: s.trackingNumber, // Use trackingNumber as unique ID for list
+                jobId: s.jobId,
+                trackingNumber: s.trackingNumber,
+                title: s.title,
+                short: s.short,
+                recipient: s.recipient,
+                pickupAddress: s.pickupAddress,
+                dropoffAddress: s.dropoffAddress,
+                phone: s.phone,
+                eta: s.eta,
+                priority: s.priority,
+                notes: s.notes,
+                zipCode: s.dropoffPostCode,
+
+                // State management
+                status: s.status,
                 currentJobStatus: 0,
-                nextStep: 0,
-                // ... map defaults
-                status: 'Assigned',
-                priority: 'Normal',
-                eta: '--',
+                nextStep: parseInt(s.nextStep, 10) || 0,
             }));
         },
         updateJobStatus(state, action: PayloadAction<{ jobId: string; status: number; nextStep: number }>) {

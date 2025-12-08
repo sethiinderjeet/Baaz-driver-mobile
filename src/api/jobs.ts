@@ -1,6 +1,8 @@
 // app/api/jobs.ts
 export type Delivery = {
-  id: string;
+  id: string; // Will store trackingNumber or unique ID for UI lists
+  jobId: number; // Backend ID for navigation
+  trackingNumber: string; // Displayed tracking ID
   title: string;      // e.g. "Deliver - Order #1234"
   short: string;      // short note
   pickupAddress: string;
@@ -50,16 +52,25 @@ export const STATUS_COLORS = [
 
 import { API_BASE_URL } from '../constants/config';
 
-export type JobSummary = {
+export type JobResponse = {
+  jobId: number;
   trackingNumber: string;
-  jobTitle: string;
-  clientName: string;
-  totalStops: number;
-  // Optional mapping to existing Delivery if needed for UI compatibility
-  id?: string;
+  title: string;
+  short: string;
+  pickupAddress: string;
+  pickupPostCode: string;
+  dropoffAddress: string;
+  dropoffPostCode: string;
+  recipient: string;
+  phone: string;
+  eta: string;
+  status: string; // Changed to string
+  priority: string;
+  notes: string;
+  nextStep: string;
 };
 
-export async function fetchJobsApi(driverId: number): Promise<JobSummary[]> {
+export async function fetchJobsApi(driverId: number): Promise<JobResponse[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/Jobs/${driverId}`);
     if (!response.ok) {
@@ -78,8 +89,8 @@ export async function fetchAssignedDeliveriesApi(token: string): Promise<Deliver
   return [
     {
       id: 'D-1001',
-      // ... rest of mock data ...
-
+      jobId: 1001,
+      trackingNumber: 'D-1001',
       title: 'Deliver - Order #1001',
       short: 'Fragile - Handle with care',
       pickupAddress: 'Unit 5, Industrial Estate, Birmingham B25 8HE',
@@ -98,6 +109,8 @@ export async function fetchAssignedDeliveriesApi(token: string): Promise<Deliver
     },
     {
       id: 'D-1002',
+      jobId: 1002,
+      trackingNumber: 'D-1002',
       title: 'Deliver - Order #1002',
       short: 'Documents - signature required',
       pickupAddress: 'Manchester Airport, Manchester M90 1QX',
@@ -116,6 +129,8 @@ export async function fetchAssignedDeliveriesApi(token: string): Promise<Deliver
     },
     {
       id: 'D-1003',
+      jobId: 1003,
+      trackingNumber: 'D-1003',
       title: 'Pickup - Return #1003',
       short: 'Return pickup from customer',
       pickupAddress: 'Edinburgh Castle, Castlehill, Edinburgh EH1 2NG',
