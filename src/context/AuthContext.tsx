@@ -2,13 +2,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { SignInResponse } from '../api/auth';
-import { signInApi } from '../api/auth';
+import { signInApi, validateEmailApi, verifyOtpApi } from '../api/auth';
 
 type User = { token: string; name?: string } | null;
 type AuthContextType = {
   user: User;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  verifyEmail: (email: string) => Promise<void>;
+  loginWithOtp: (email: string, otp: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -34,6 +36,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     const res: SignInResponse = await signInApi(email, password);
+    await handleLoginSuccess(res);
+  };
+
+  const verifyEmail = async (email: string) => {
+    await validateEmailApi(email);
+  };
+
+  const loginWithOtp = async (email: string, otp: string) => {
+    const res = await verifyOtpApi(email, otp);
+    await handleLoginSuccess(res);
+  };
+
+  const handleLoginSuccess = async (res: SignInResponse) => {
     await AsyncStorage.setItem('token', res.token);
     if (res.name) await AsyncStorage.setItem('name', res.name);
     setUser({ token: res.token, name: res.name });
@@ -45,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
-  return <AuthContext.Provider value={{ user, loading, signIn, signOut }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, signIn, verifyEmail, loginWithOtp, signOut }}>{children}</AuthContext.Provider>;
 };
 
 export function useAuth() {
