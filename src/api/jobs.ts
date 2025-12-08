@@ -58,6 +58,7 @@ export type JobResponse = {
   title: string;
   short: string;
   pickupAddress: string;
+  pickupLocation?: string; // Add optional to match detailed response
   pickupPostCode: string;
   dropoffAddress: string;
   dropoffPostCode: string;
@@ -70,6 +71,39 @@ export type JobResponse = {
   nextStep: string;
 };
 
+export interface Stop {
+  id: number;
+  address: string;
+  sequenceOrder: number;
+  status: string;
+  contactName: string;
+  contactPhone: string;
+  notes: string;
+}
+
+export interface StatusHistory {
+  currentStatusHistoryID: number;
+  jobId: number;
+  currentStatusId: number;
+  currentStatusName: string;
+  nextStatusId: number;
+  nextStatusName: string;
+  pendingStopId: number;
+  notes: string | null;
+  createdDate: string;
+}
+
+export interface JobDetail extends JobResponse {
+  clientName: string;
+  clientPhone: string;
+  driverName: string;
+  truckNo: string;
+  pickupDateTime: string;
+  stops: Stop[];
+  statusHistory: StatusHistory[];
+  attachments: any[]; // Define specific type if known, using any[] for now based on []
+}
+
 export async function fetchJobsApi(driverId: number): Promise<JobResponse[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/Jobs/${driverId}`);
@@ -80,6 +114,19 @@ export async function fetchJobsApi(driverId: number): Promise<JobResponse[]> {
   } catch (error) {
     console.error('Fetch jobs error', error);
     throw error;
+  }
+}
+
+export async function fetchJobDetailApi(jobId: number): Promise<JobDetail> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/Jobs/detail/${jobId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch job detail');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Fetch detail error', error);
+    throw error; // Re-throw to handle in UI
   }
 }
 
