@@ -3,10 +3,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import React, { JSX, useEffect, useState } from 'react';
-import { Alert, Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { JobDetail, STATUS_COLORS, STATUS_LABELS, fetchJobDetailApi, updateJobStatusApi } from '../api/jobs';
+import { JobDetail, STATUS_COLORS, STATUS_LABELS, fetchJobDetailApi, postJobStatusHistory } from '../api/jobs';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
 import { RootState } from '../store/store';
@@ -31,6 +32,7 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
   const [detail, setDetail] = useState<JobDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
     // Fetch full details
@@ -58,8 +60,37 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
       const nextId = lastHistory.nextStatusId;
       try {
         setLoading(true);
-        // Optimistic redux update (optional, skipping for simplicity as we reload)
-        await updateJobStatusApi(user.token, job.id, nextId);
+
+        // Get Location
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission to access location was denied');
+          return;
+        }
+
+        let location = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = location.coords;
+
+        // Determine Stop ID
+        // 5 = On Drop Site, 6 = Delivered. For these, pass current stop ID (pendingStopId). Else 0.
+        const stopId = (nextId === 5 || nextId === 6) ? (lastHistory.pendingStopId || 0) : 0;
+
+        const payload = {
+          id: 0,
+          jobId: job.jobId,
+          stopId: stopId,
+          statusId: nextId,
+          statusTime: new Date().toISOString(),
+          latitude: latitude,
+          longitude: longitude,
+          notes: notes,
+          createdBy: detail?.driverName || user.name || 'Driver', // Fallback
+        };
+
+        console.log("Sending Status Update:", JSON.stringify(payload, null, 2));
+
+        await postJobStatusHistory(payload);
+        setNotes(''); // Clear notes after success
         await loadDetail();
       } catch (e) {
         Alert.alert("Error", "Failed to update status");
@@ -189,40 +220,58 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
           </View>
         )}
 
-        {/* Attachments Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Attachments</Text>
-          <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-              <Ionicons name="image-outline" size={20} color="#fff" />
-              <Text style={styles.uploadButtonText}>Add Image</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.uploadButton} onPress={takePhoto}>
-              <Ionicons name="camera-outline" size={20} color="#fff" />
-              <Text style={styles.uploadButtonText}>Take Photo</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.uploadButton} onPress={pickDocument}>
-              <Ionicons name="document-outline" size={20} color="#fff" />
-              <Text style={styles.uploadButtonText}>Add File</Text>
-            </TouchableOpacity>
-          </View>
-
-          {attachments.length > 0 ? (
-            attachments.map((item, index) => (
-              <View key={index} style={styles.attachmentItem}>
-                <View style={styles.attachmentInfo}>
-                  <Ionicons name={item.type === 'image' ? 'image' : 'document'} size={24} color={PRIMARY} />
-                  <Text style={styles.attachmentName} numberOfLines={1}>{item.name}</Text>
-                </View>
-                <TouchableOpacity onPress={() => removeAttachment(index)}>
-                  <Ionicons name="close-circle" size={24} color="#ef4444" />
+        {/* Attachments Section - Visible only for Next Status 4 (Loaded) or 6 (Delivered) */}
+        {
+          lastHistory && (lastHistory.nextStatusId === 4 || lastHistory.nextStatusId === 6) && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Attachments</Text>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+                  <Ionicons name="image-outline" size={20} color="#fff" />
+                  <Text style={styles.uploadButtonText}>Add Image</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.uploadButton} onPress={takePhoto}>
+                  <Ionicons name="camera-outline" size={20} color="#fff" />
+                  <Text style={styles.uploadButtonText}>Take Photo</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.uploadButton} onPress={pickDocument}>
+                  <Ionicons name="document-outline" size={20} color="#fff" />
+                  <Text style={styles.uploadButtonText}>Add File</Text>
                 </TouchableOpacity>
               </View>
-            ))
-          ) : (
-            <Text style={{ color: '#999', fontStyle: 'italic', marginBottom: 12 }}>No attachments yet.</Text>
-          )}
-        </View>
+
+              {attachments.length > 0 ? (
+                attachments.map((item, index) => (
+                  <View key={index} style={styles.attachmentItem}>
+                    <View style={styles.attachmentInfo}>
+                      <Ionicons name={item.type === 'image' ? 'image' : 'document'} size={24} color={PRIMARY} />
+                      <Text style={styles.attachmentName} numberOfLines={1}>{item.name}</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => removeAttachment(index)}>
+                      <Ionicons name="close-circle" size={24} color="#ef4444" />
+                    </TouchableOpacity>
+                  </View>
+                ))
+              ) : (
+                <Text style={{ color: '#999', fontStyle: 'italic', marginBottom: 12 }}>No attachments yet.</Text>
+              )}
+            </View>
+          )
+        }
+
+        {/* Notes Input */}
+        {lastHistory?.nextStatusName && (
+          <View style={{ marginTop: 20 }}>
+            <Text style={[styles.label, { marginBottom: 8 }]}>Add Notes (Optional)</Text>
+            <TextInput
+              style={styles.notesInput}
+              placeholder="Type any notes here..."
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+            />
+          </View>
+        )}
 
         {/* Next Step Button */}
         {lastHistory && lastHistory.nextStatusName && (
@@ -285,4 +334,14 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   label: { fontWeight: '600', color: '#555', fontSize: 14 },
   val: { fontWeight: '400', color: '#333', fontSize: 14, flex: 1, textAlign: 'right' },
+  notesInput: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 80,
+    textAlignVertical: 'top',
+    fontSize: 14,
+  }
 });

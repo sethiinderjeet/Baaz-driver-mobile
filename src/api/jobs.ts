@@ -21,13 +21,13 @@ export type Delivery = {
 };
 
 export const JOB_STATUS = {
-  ASSIGNED: 0,
-  ON_THE_WAY: 1,
-  ON_PICKUP_SITE: 2,
-  LOADED: 3,
-  ON_DROP_SITE: 4,
-  DELIVERED: 5,
-  COMPLETED: 6,
+  ASSIGNED: 1,
+  ON_THE_WAY: 2,
+  ON_PICKUP_SITE: 3,
+  LOADED: 4,
+  ON_DROP_SITE: 5,
+  DELIVERED: 6,
+  COMPLETED: 7,
 };
 
 export const STATUS_LABELS = [
@@ -197,9 +197,42 @@ export async function fetchAssignedDeliveriesApi(token: string): Promise<Deliver
   ];
 }
 
+export interface JobStatusHistoryRequest {
+  id: number;
+  jobId: number;
+  stopId: number;
+  statusId: number;
+  statusTime: string;
+  latitude: number;
+  longitude: number;
+  notes: string;
+  createdBy: string;
+}
+
 export async function updateJobStatusApi(token: string, jobId: string, status: number): Promise<boolean> {
   // Mock API call
   console.log(`[API] Updating job ${jobId} status to ${status}`);
   await new Promise((r) => setTimeout(r, 500));
   return true;
+}
+
+export async function postJobStatusHistory(payload: JobStatusHistoryRequest): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/JobStatusHistory`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to post status history:', errorText);
+      throw new Error(`Failed to update status: ${response.status}`);
+    }
+    return true;
+  } catch (error) {
+    console.error('Post status history error', error);
+    throw error;
+  }
 }
