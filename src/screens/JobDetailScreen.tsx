@@ -105,9 +105,34 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
   };
 
   const handleNavigate = () => {
+    // Determine target based on next status
+    // Status 2 (On the Way) -> Pickup
+    // Status 5 (On Drop Site) -> Dropoff
+    // We generalize: <= 3 -> Pickup, >= 4 -> Dropoff
+    const nextStatusId = lastHistory?.nextStatusId ?? (typeof job.nextStep === 'number' ? job.nextStep : parseInt(job.nextStep as string || '0', 10));
+
+    let destination = '';
+    const isPickup = nextStatusId <= 3;
+
+    // Priorities: 1. Detail PostCode, 2. Detail Address, 3. Job PostCode, 4. Job Address
+    if (detail) {
+      if (isPickup) {
+        destination = detail.pickupPostCode || detail.pickupLocation || detail.pickupAddress;
+      } else {
+        destination = detail.dropoffPostCode || detail.dropoffAddress;
+      }
+    } else {
+      // Fallback to initial job data
+      const j = job as any;
+      if (isPickup) {
+        destination = j.pickupPostCode || j.pickupAddress || '';
+      } else {
+        destination = j.dropoffPostCode || j.dropoffAddress || '';
+      }
+    }
+
     const scheme = Platform.select({ ios: 'maps://0,0?daddr=', android: 'google.navigation:q=' });
-    // Use detail or job
-    const label = encodeURIComponent(detail?.pickupLocation || job.pickupAddress || '');
+    const label = encodeURIComponent(destination);
     const url = Platform.select({
       ios: `${scheme}${label}`,
       android: `${scheme}${label}`
