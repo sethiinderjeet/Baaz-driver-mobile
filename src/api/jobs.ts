@@ -197,16 +197,23 @@ export async function fetchAssignedDeliveriesApi(token: string): Promise<Deliver
   ];
 }
 
+// types.ts (or top of file)
+export interface UploadFile {
+  uri: string;       // file://, blob:, http(s):// or content:// (may need conversion)
+  name?: string;     // filename to send to server
+  type?: string;     // mime type e.g. "image/jpeg"
+}
+
 export interface JobStatusHistoryRequest {
-  id: number;
-  jobId: number;
-  stopId: number;
-  statusId: number;
-  statusTime: string;
-  latitude: number;
-  longitude: number;
-  notes: string;
-  createdBy: string;
+  JobId: number;
+  StopId?: number | null;
+  StatusId: number;
+  StatusTime: string | Date;
+  Latitude?: number | null;
+  Longitude?: number | null;
+  Notes?: string | null;
+  CreatedBy?: string | null;
+  Files?: UploadFile[] | null;
 }
 
 export async function updateJobStatusApi(token: string, jobId: string, status: number): Promise<boolean> {
@@ -216,23 +223,33 @@ export async function updateJobStatusApi(token: string, jobId: string, status: n
   return true;
 }
 
-export async function postJobStatusHistory(payload: JobStatusHistoryRequest): Promise<boolean> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/JobStatusHistory`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to post status history:', errorText);
-      throw new Error(`Failed to update status: ${response.status}`);
+
+export async function postJobStatusHistory(payload: JobStatusHistoryRequest) {
+  const formData = new FormData();
+
+  // Append non-file fields
+  (Object.keys(payload) as Array<keyof JobStatusHistoryRequest>).forEach(key => {
+    if (key !== "Files") {
+      formData.append(key, String(payload[key] ?? ""));
     }
-    return true;
-  } catch (error) {
-    console.error('Post status history error', error);
-    throw error;
-  }
+  });
+
+  // Append files
+  payload.Files?.forEach((file, index) => {
+    formData.append(
+      "Files",
+      {
+        uri: file.uri,
+        name: file.name ?? "image.jpg",
+        type: file.type ?? "image/jpeg",
+      } as any
+    );
+  });
+
+  const response = await fetch(API_BASE_URL + "/JobStatusHistory", {
+    method: "POST",
+    body: formData,   //  DO NOT SET HEADERS!! Android will break.
+  });
+
+  return await response.json();
 }

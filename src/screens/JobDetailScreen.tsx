@@ -58,6 +58,12 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
 
     if (lastHistory) {
       const nextId = lastHistory.nextStatusId;
+
+      if ((nextId === 4 || nextId === 6) && attachments.length === 0) {
+        Alert.alert("Required", "Please add at least one attachment (image or file) to proceed.");
+        return;
+      }
+
       try {
         setLoading(true);
 
@@ -75,22 +81,30 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
         // 5 = On Drop Site, 6 = Delivered. For these, pass current stop ID (pendingStopId). Else 0.
         const stopId = (nextId === 5 || nextId === 6) ? (lastHistory.pendingStopId || 0) : 0;
 
+        // Filter valid attachments and map to required format
+        const filesToUpload = attachments.map(a => ({
+          uri: a.uri,
+          name: a.name,
+          type: a.mimeType || (a.type === 'image' ? 'image/jpeg' : 'application/octet-stream')
+        }));
+
         const payload = {
-          id: 0,
-          jobId: job.jobId,
-          stopId: stopId,
-          statusId: nextId,
-          statusTime: new Date().toISOString(),
-          latitude: latitude,
-          longitude: longitude,
-          notes: notes,
-          createdBy: detail?.driverName || user.name || 'Driver', // Fallback
+          JobId: job.jobId,
+          StopId: stopId,
+          StatusId: nextId,
+          StatusTime: new Date().toISOString(),
+          Latitude: latitude,
+          Longitude: longitude,
+          Notes: notes,
+          CreatedBy: detail?.driverName || user.name || 'Driver', // Fallback
+          Files: filesToUpload
         };
 
         console.log("Sending Status Update:", JSON.stringify(payload, null, 2));
 
         await postJobStatusHistory(payload);
         setNotes(''); // Clear notes after success
+        setAttachments([]); // Clear attachments after success
         await loadDetail();
       } catch (e) {
         Alert.alert("Error", "Failed to update status");
