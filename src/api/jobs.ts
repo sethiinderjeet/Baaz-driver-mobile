@@ -241,7 +241,7 @@ export async function postJobStatusHistory(payload: JobStatusHistoryRequest) {
       {
         uri: file.uri,
         name: file.name ?? "image.jpg",
-        type: file.type ?? "image/jpeg",
+        type: file.type || "application/octet-stream",
       } as any
     );
   });

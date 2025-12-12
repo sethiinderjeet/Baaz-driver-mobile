@@ -5,7 +5,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import React, { JSX, useEffect, useState } from 'react';
-import { Alert, Linking, Platform, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Linking, Platform, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { JobDetail, STATUS_COLORS, STATUS_LABELS, fetchJobDetailApi, postJobStatusHistory } from '../api/jobs';
 import { useAuth } from '../context/AuthContext';
@@ -288,7 +288,11 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
                 attachments.map((item, index) => (
                   <View key={index} style={styles.attachmentItem}>
                     <View style={styles.attachmentInfo}>
-                      <Ionicons name={item.type === 'image' ? 'image' : 'document'} size={24} color={PRIMARY} />
+                      {item.type === 'image' ? (
+                        <Image source={{ uri: item.uri }} style={{ width: 40, height: 40, borderRadius: 4, marginRight: 8 }} />
+                      ) : (
+                        <Ionicons name="document" size={24} color={PRIMARY} />
+                      )}
                       <Text style={styles.attachmentName} numberOfLines={1}>{item.name}</Text>
                     </View>
                     <TouchableOpacity onPress={() => removeAttachment(index)}>
