@@ -5,7 +5,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import React, { JSX, useEffect, useState } from 'react';
-import { Alert, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, Platform, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { JobDetail, STATUS_COLORS, STATUS_LABELS, fetchJobDetailApi, postJobStatusHistory } from '../api/jobs';
 import { useAuth } from '../context/AuthContext';
@@ -200,7 +200,12 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={loadDetail} colors={[PRIMARY]} tintColor={PRIMARY} />
+        }
+      >
         <Text style={styles.title}>{job.title}</Text>
         <Text style={styles.muted}>Ref: {job.trackingNumber} • Priority: {job.priority}</Text>
         <Text style={[styles.muted, { marginTop: 4 }]}>Status: {lastHistory?.currentStatusName || STATUS_LABELS[job.currentJobStatus] || job.status}</Text>

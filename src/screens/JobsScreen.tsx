@@ -1,7 +1,7 @@
 // app/screens/JobsScreen.tsx
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { JSX, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Delivery, fetchJobsApi } from '../api/jobs';
 import { useAuth } from '../context/AuthContext';
@@ -77,8 +77,9 @@ export default function JobsScreen({ navigation }: Props): JSX.Element {
         data={filtered}
         keyExtractor={(i) => i.id}
         renderItem={renderItem}
-        refreshing={loading}
-        onRefresh={loadDeliveries}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={loadDeliveries} colors={[PRIMARY]} tintColor={PRIMARY} />
+        }
         ListEmptyComponent={
           <View style={{ marginTop: 40, alignItems: 'center' }}>
             <Text style={{ fontSize: 16, color: '#64748b', fontWeight: '500' }}>No job assigned yet</Text>
