@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { JobDetail, STATUS_COLORS, STATUS_LABELS, fetchJobDetailApi, postJobStatusHistory } from '../api/jobs';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
+import { updateJobStatus } from '../store/jobsSlice';
 import { RootState } from '../store/store';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JobDetail'>;
@@ -106,7 +107,43 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
         await postJobStatusHistory(payload);
         setNotes(''); // Clear notes after success
         setAttachments([]); // Clear attachments after success
-        await loadDetail();
+
+        // Optimistic / Local Update
+        const newHistoryItem = {
+          statusHistoryId: Date.now(),
+          jobId: job.jobId,
+          statusId: nextId,
+          statusName: STATUS_LABELS[nextId - 1] || 'Updated',
+          statusTime: new Date().toISOString(),
+          latitude: latitude,
+          longitude: longitude,
+          notes: notes,
+          createdBy: user.name,
+          currentStatusId: nextId,
+          currentStatusName: STATUS_LABELS[nextId - 1] || '',
+          nextStatusId: nextId + 1,
+          nextStatusName: nextId + 1 <= 7 ? (STATUS_LABELS[(nextId + 1) - 1] || '') : '',
+          documentUrl: null,
+          pendingStopId: stopId
+        };
+
+        if (detail) {
+          setDetail({
+            ...detail,
+            statusHistory: [newHistoryItem as any, ...detail.statusHistory]
+          });
+        }
+
+        dispatch(updateJobStatus({
+          jobId: job.id,
+          status: nextId,
+          nextStep: nextId + 1
+        }));
+
+        // Only reload from server if status is Delivered (6) or potentially Completed (7)
+        if (nextId === 6 || nextId === 7) {
+          await loadDetail();
+        }
       } catch (e) {
         Alert.alert("Error", "Failed to update status");
         console.error(e);
