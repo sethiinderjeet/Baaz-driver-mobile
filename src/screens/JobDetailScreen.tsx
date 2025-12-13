@@ -55,6 +55,7 @@ export default function JobDetailScreen({ route, navigation }: Props): JSX.Eleme
 
   const handleNextStep = async () => {
     if (!user) return;
+    if (loading) return; // Prevent simultaneous calls
 
     if (lastHistory) {
       const nextId = lastHistory.nextStatusId;
